@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Colleges - UniFind</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .search-container {
+            display: flex;
+            padding: 2rem 5%;
+            gap: 2rem;
+        }
+
+        .filters {
+            flex: 1;
+            max-width: 250px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .results {
+            flex: 3;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px;
+            border-radius: 30px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="glass">
+        <a href="index.html" class="logo">UniFind</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="search.html" style="color: var(--primary-color);">Find Colleges</a>
+            <a href="scholarships.html">Scholarships</a>
+            <a href="community.html">Community</a>
+            <a href="#" class="auth-btn">Login</a>
+        </div>
+    </nav>
+
+    <div class="search-container">
+        <!-- Sidebar Filters -->
+        <aside class="glass filters">
+            <h3>Filters</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+
+            <div class="filter-group">
+                <label>Region</label>
+                <select id="filter-region">
+                    <option value="all">All</option>
+                    <option value="National">National (India)</option>
+                    <option value="International">International</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Max Fees ($)</label>
+                <input type="range" id="filter-fees" min="0" max="60000" step="5000" value="60000">
+                <div id="fee-display" style="text-align: right; font-size: 0.9rem;">$60k</div>
+            </div>
+
+            <div class="filter-group">
+                <label><input type="checkbox" id="filter-scholarship"> Scholarships Only</label>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="results">
+            <input type="text" class="search-bar" id="search-input"
+                placeholder="Search by name, country, or location...">
+
+            <div class="college-grid" id="results-grid">
+                <!-- Populated by JS -->
+            </div>
+        </main>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        const grid = document.getElementById('results-grid');
+        const searchInput = document.getElementById('search-input');
+        const regionFilter = document.getElementById('filter-region');
+        const feeFilter = document.getElementById('filter-fees');
+        const feeDisplay = document.getElementById('fee-display');
+        const scholarshipFilter = document.getElementById('filter-scholarship');
+
+        function renderColleges(data) {
+            grid.innerHTML = '';
+            data.forEach(college => {
+                const card = document.createElement('div');
+                card.className = 'glass college-card';
+                card.innerHTML = `
+                    <div class="card-img" style="background-image: url('${college.logo || ''}'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: white;"></div>
+                    <div class="card-content">
+                        <div class="card-title">${college.name}</div>
+                        <div class="card-info">${college.location} • $${college.fees.toLocaleString()}/yr</div>
+                        <div style="font-size: 0.8rem; margin-bottom: 10px;">Ranking: #${college.ranking}</div>
+                        <a href="college.html?id=${college.id}" class="card-link">View Details →</a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            if (data.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No colleges found matching criteria.</p>';
+            }
+        }
+
+        function filterData() {
+            const query = searchInput.value.toLowerCase();
+            const region = regionFilter.value;
+            const maxFee = parseInt(feeFilter.value);
+            const scholarshipOnly = scholarshipFilter.checked;
+
+            const filtered = colleges.filter(c => {
+                const matchesSearch = c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query);
+                const matchesRegion = region === 'all' || c.type === region;
+                const matchesFee = c.fees <= maxFee;
+                const matchesSchol = !scholarshipOnly || c.scholarships;
+
+                return matchesSearch && matchesRegion && matchesFee && matchesSchol;
+            });
+
+            renderColleges(filtered);
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', filterData);
+        regionFilter.addEventListener('change', filterData);
+        feeFilter.addEventListener('input', (e) => {
+            feeDisplay.textContent = '$' + parseInt(e.target.value).toLocaleString() + 'k';
+            filterData();
+        });
+        scholarshipFilter.addEventListener('change', filterData);
+
+        // Initial Render
+        renderColleges(colleges);
+    </script>
+</body>
+
+</html>
